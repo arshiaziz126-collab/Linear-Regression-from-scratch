@@ -1,0 +1,5 @@
+# Needed to run the website + API (this is what Vercel installs)
+fastapi>=0.165
+uvicorn>=0.30
+numpy>=1.26
+matplotlib>=3.8

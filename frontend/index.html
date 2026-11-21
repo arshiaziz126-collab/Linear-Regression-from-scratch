@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GlycoCast · Linear regression from scratch</title>
+<meta name="description" content="Linear regression written from scratch in NumPy that predicts diabetes progression. Built by Arshi.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M8 52 L56 12' stroke='%237B1E3A' stroke-width='7' stroke-linecap='round'/%3E%3Ccircle cx='18' cy='34' r='5' fill='%23D99AA8'/%3E%3Ccircle cx='44' cy='30' r='5' fill='%23D99AA8'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>GlycoCast</h1>
+    <p class="note">Linear regression written from scratch in NumPy. It predicts how much a patient's diabetes will progress
+      in one year from 10 baseline measurements (442 real patients).</p>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-tab="predict" role="tab">🍷 Predict</button>
+    <button class="tab" data-tab="playground" role="tab">🎢 Gradient descent playground</button>
+    <button class="tab" data-tab="performance" role="tab">📊 Model performance</button>
+    <button class="tab" data-tab="how" role="tab">🧠 How it works</button>
+  </nav>
+
+  <!-- ============================== PREDICT ============================== -->
+  <section id="predict" class="panel active">
+    <div class="predict-grid">
+      <div class="left">
+        <h3>Patient measurements</h3>
+        <div class="radio">
+          <label><input type="radio" name="mode" value="patient" checked> Real test patient</label>
+          <label><input type="radio" name="mode" value="custom"> Enter values</label>
+        </div>
+
+        <div id="patient-box">
+          <div class="slider-head"><span>Test patient #</span><b id="patient-num">0</b></div>
+          <input type="range" id="patient" min="0" max="87" value="0" step="1">
+          <p class="note" id="actual"></p>
+          <table id="values"></table>
+        </div>
+
+        <div id="custom-box" hidden>
+          <div class="inputs" id="inputs"></div>
+        </div>
+      </div>
+
+      <div class="right">
+        <p class="note">Predicted disease progression after 1 year</p>
+        <div class="big" id="pred">…</div>
+        <div class="track"><div class="fill" id="fill" style="width:1%"></div></div>
+        <p class="note" id="range-note"></p>
+        <img id="contrib" class="chart" alt="How each measurement changes the prediction">
+        <p class="error" id="error" hidden></p>
+      </div>
+    </div>
+    <p class="note">⚠️ Educational project, not a medical tool.</p>
+  </section>
+
+  <!-- ============================ PLAYGROUND ============================= -->
+  <section id="playground" class="panel">
+    <h3>Watch gradient descent learn (BMI → progression)</h3>
+    <p class="note">Change the settings and see how the learning rate, number of steps and feature scaling change the path
+      towards the best line.</p>
+    <div class="controls">
+      <label class="toggle"><input type="checkbox" id="scaled" checked> <span>Scale the feature</span></label>
+      <div>
+        <div class="slider-head"><span>Steps</span><b id="steps-num">200</b></div>
+        <input type="range" id="steps" min="10" max="1000" step="10" value="200">
+      </div>
+      <div>
+        <div class="slider-head"><span>Learning rate</span><b id="lr-num">0.05</b></div>
+        <input type="range" id="lr" min="0" max="8" step="1" value="3">
+      </div>
+    </div>
+    <p class="alert" id="diverged" hidden>💥 The learning rate is too big: the steps overshoot and the error explodes. Try a smaller one.</p>
+    <img id="play" class="chart" alt="Gradient descent path on the error surface">
+    <p class="note" id="play-note"></p>
+  </section>
+
+  <!-- ============================ PERFORMANCE ============================ -->
+  <section id="performance" class="panel">
+    <div class="cards" id="cards"></div>
+    <div class="two">
+      <img src="assets/pred_vs_actual.png" alt="Predicted vs actual">
+      <img src="assets/coefficients.png" alt="Coefficients">
+    </div>
+    <img src="assets/loss_landscape.png" alt="Loss landscape with and without scaling">
+    <img src="assets/residuals.png" alt="Residuals">
+    <h3>Sanity check</h3>
+    <table id="sanity"></table>
+  </section>
+
+  <!-- ============================ HOW IT WORKS =========================== -->
+  <section id="how" class="panel">
+    <h3>The model</h3>
+    <p><code>prediction = w₁·age + w₂·sex + w₃·BMI + … + w₁₀·blood sugar + b</code></p>
+    <h3>What I wrote by hand</h3>
+    <ul>
+      <li><b>Loss</b>: mean squared error, the average of (actual − predicted)².</li>
+      <li><b>Gradients</b> (calculus): <code>dL/dw = (2/n)·Xᵀ(ŷ − y)</code> and <code>dL/db = (2/n)·Σ(ŷ − y)</code>.</li>
+      <li><b>Gradient descent</b>: start at 0 and take small steps downhill until the error stops falling.</li>
+      <li><b>Normal equation</b>: the exact one-shot answer <code>θ = (XᵀX)⁻¹Xᵀy</code>. It matches gradient descent.</li>
+      <li><b>Ridge (L2)</b> option to shrink weights when features are correlated.</li>
+      <li><b>Feature scaling</b>, <b>train/test split</b>, <b>5-fold cross-validation</b>, and the <b>R², RMSE and MAE</b> metrics.</li>
+    </ul>
+    <h3>How this website works</h3>
+    <ul>
+      <li><b>Backend (Python, FastAPI)</b>: loads the trained weights, makes predictions, runs gradient descent for the playground, and draws the charts with matplotlib.</li>
+      <li><b>Frontend (this page)</b>: sends your inputs to <code>/api/predict</code> and <code>/api/playground</code> and shows the answers.</li>
+      <li>Both are deployed together on Vercel, so the app never goes to sleep.</li>
+    </ul>
+    <h3>Honest results</h3>
+    <ul id="honest"></ul>
+  </section>
+
+  <footer class="note">Built by Arshi · Python, NumPy, FastAPI</footer>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
